@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSerializable
 from pydantic import BaseModel
 
-from src.ai.prompts.loader import PromptLoader
+from src.ai.loaders.prompt import PromptLoader
 
 TInput = TypeVar(name="TInput", bound=BaseModel)
 TOutput = TypeVar(name="TOutput", bound=BaseModel)
