@@ -17,3 +17,13 @@ class StoryScene(BaseModel):
 class StoryOutput(BaseModel):
     title: str
     scenes: list[StoryScene]
+
+
+class EditStoryInput(BaseModel):
+    instruction: str
+
+
+class EditStoryOutput(BaseModel):
+    regenerate: bool
+    scenes: list[int] = Field(default_factory=list)
+    instruction: str
