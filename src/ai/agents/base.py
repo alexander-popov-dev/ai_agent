@@ -32,7 +32,7 @@ class BaseAgent[TInput, TOutput](ABC):
         )
 
     @cached_property
-    def _chain(self) -> RunnableSerializable[dict[str, Any], dict[str, Any]]:
+    def _chain(self) -> RunnableSerializable[dict[str, Any], TOutput]:
         return (
                 self._prompt
                 |
