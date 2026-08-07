@@ -15,8 +15,8 @@ class RedisSettings(BaseProjectSettings):
     """
 
     redis_host: str = Field(alias="REDIS_HOST")
-    redis_port: int = Field(alias="REDIS_PORT")
     redis_pass: str = Field(alias="REDIS_PASS")
+    redis_port: str = Field(alias="REDIS_PORT")
 
     # Role → DB index mapping. Declared as ClassVar so pydantic treats
     # them as class-level constants rather than env-driven fields.

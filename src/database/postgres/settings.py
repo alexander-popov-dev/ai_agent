@@ -10,7 +10,6 @@ class DatabaseSettings(BaseProjectSettings):
     """PostgreSQL connection settings sourced from environment variables."""
 
     db_host: str = Field(alias="DB_HOST")
-    db_port: int = Field(alias="DB_PORT")
     db_user: str = Field(alias="DB_USER")
     db_name: str = Field(alias="DB_NAME")
     db_pass: str = Field(alias="DB_PASS")
@@ -26,7 +25,6 @@ class DatabaseSettings(BaseProjectSettings):
         return URL.create(
             drivername="postgresql+asyncpg",
             host=self.db_host,
-            port=self.db_port,
             username=self.db_user,
             password=self.db_pass,
             database=self.db_name,

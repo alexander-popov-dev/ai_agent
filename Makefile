@@ -40,3 +40,5 @@ down-db:
 
 logs-db:
 	$(COMPOSE) logs -f --tail 1000
+
+rebuild: down-db up-db

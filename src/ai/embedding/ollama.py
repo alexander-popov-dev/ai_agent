@@ -5,7 +5,7 @@ from src.ai.embedding.base import BaseEmbedding
 
 class OllamaEmbedding(BaseEmbedding):
 
-    def __init__(self, model: str, base_url: str) -> None:
+    def __init__(self, model: str, base_url: str | None = None) -> None:
         self._model = model
         self._base_url = base_url
         self._embedding = OllamaEmbeddings(model=model, base_url=base_url)
