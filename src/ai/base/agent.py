@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from functools import cached_property
 from typing import Any, TypeVar
@@ -5,6 +6,7 @@ from typing import Any, TypeVar
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableSerializable
+from openrouter.errors import ResponseValidationError
 from pydantic import BaseModel
 
 from src.core.logging.logger import get_logger
@@ -35,4 +37,10 @@ class BaseAgent[TInput, TOutput](LoggedMixin):
 
     async def execute(self, schema: TInput) -> TOutput:
         self.logger.info("Invoking LLM", model=self._model)
-        return await self._chain.ainvoke(schema.model_dump())
+        for i in range(6):
+            try:
+                return await self._chain.ainvoke(schema.model_dump())
+            except ResponseValidationError as e:
+                await asyncio.sleep(2)
+
+        raise Exception('Invoke error')

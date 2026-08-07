@@ -2,15 +2,13 @@ from pydantic import BaseModel, computed_field, Field
 
 from src.pipelines.reels.enums import StoryEditStatus
 from src.pipelines.reels.schemas.idea import GenerateIdeaOutput, IdeaContext
-from src.pipelines.reels.schemas.story import GenerateStoryOutput, StoryContext, ParseUserAnswerContext, \
-    GenerateStoryScene
+from src.pipelines.reels.schemas.story import GenerateStoryOutput, StoryContext, ParseUserAnswerContext
 
 
 class ReelsSessionConfig(BaseModel):
     niche: str
     ideas: list[GenerateIdeaOutput] = Field(default_factory=list)
     selected_idea_index: int | None = None
-    ideas_offset: int = 0
     story: GenerateStoryOutput | None = None
     story_status: StoryEditStatus = StoryEditStatus.EDIT
     idea_context: IdeaContext = Field(default_factory=IdeaContext)
@@ -47,22 +45,6 @@ class ReelsSessionConfig(BaseModel):
     def set_parsed_instruction(self, instruction: str | None) -> None:
         if instruction is not None:
             self.user_answer_context.instruction = instruction
-
-    @computed_field
-    @property
-    def selected_scenes(self) -> list[GenerateStoryScene] | list:
-        if self.story is None:
-            return []
-
-        return [
-            scene
-            for scene in self.story.scenes
-            if scene.order in self.user_answer_context.scenes
-        ]
-
-    def set_edited_scene(self, scenes: list[GenerateStoryScene]) -> None:
-        for scene in scenes:
-            self.story.scenes[scene.order - 1] = scene
 
     @computed_field
     @property

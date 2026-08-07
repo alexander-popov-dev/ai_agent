@@ -16,6 +16,6 @@ def ideas_keyboard(start_index: int, count: int):
     kb.button(
         text="➕ Еще идеи",
         callback_data=Callback.MORE_IDEAS,
-    ).adjust(1)
+    ).adjust(3)
 
     return kb.as_markup()

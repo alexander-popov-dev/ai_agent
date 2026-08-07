@@ -3,7 +3,7 @@ from src.ai.providers.factory import ProviderFactory
 from src.pipelines.core.enums import Pipeline
 from src.pipelines.core.prompt_loader import PromptLoader
 from src.pipelines.reels.agents.ideas import GenerateIdeasAgent
-from src.pipelines.reels.agents.story import GenerateStoryAgent, ParseUserAnswerAgent, EditStoryAgent
+from src.pipelines.reels.agents.story import GenerateStoryAgent, EditStoryAgent
 from src.pipelines.reels.config import ReelsPipelineConfig
 from src.pipelines.reels.pipeline import ReelsPipeline
 
@@ -27,13 +27,6 @@ class ReelsPipelineFactory:
                     pipeline_config=pipeline.generate_story
                 ),
                 prompt=PromptLoader.load(path=GenerateStoryAgent.PROMPT_PATH),
-            ),
-            parse_user_answer=ParseUserAnswerAgent(
-                model=ProviderFactory.create(
-                    ai_config=ai_config,
-                    pipeline_config=pipeline.parse_user_answer
-                ),
-                prompt=PromptLoader.load(path=ParseUserAnswerAgent.PROMPT_PATH),
             ),
             edit_story=EditStoryAgent(
                 model=ProviderFactory.create(

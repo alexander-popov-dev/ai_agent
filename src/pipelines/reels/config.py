@@ -10,7 +10,6 @@ PROMPTS_PATH = BASE_DIR / "src" / "pipelines" / "reels" / "prompts"
 class ReelsPipelineStepsConfig(BaseModel):
     generate_ideas: PipelineConfig
     generate_story: PipelineConfig
-    parse_user_answer: PipelineConfig
     edit_story: PipelineConfig
 
 

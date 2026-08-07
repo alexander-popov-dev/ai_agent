@@ -12,6 +12,7 @@ from src.telegram.state import ReelsStates
 
 
 router = Router()
+generate_ideas_count = 5
 
 @router.callback_query(F.data.startswith(Callback.NICHE))
 async def niche_selected(
@@ -24,7 +25,7 @@ async def niche_selected(
     ideas = await service.generate_ideas(
         user_id=callback.from_user.id,
         niche=niche,
-        ideas_count=3,
+        ideas_count=generate_ideas_count,
     )
 
     text = "\n\n".join(
@@ -57,18 +58,17 @@ async def receive_instruction(
     state: FSMContext,
 ):
 
-    session = await service._session.get_session(user_id=message.from_user.id)
-    saved_ideas = len(session.ideas)
+    ideas_count = await service.get_ideas_count(user_id=message.from_user.id)
 
     ideas = await service.generate_more_ideas(
         user_id=message.from_user.id,
         instruction=message.text,
-        ideas_count=3,
+        ideas_count=generate_ideas_count,
     )
 
     await state.clear()
 
-    start = saved_ideas
+    start = ideas_count
 
     text = "\n\n".join(
         f"💡 <b>Идея {start + (i + 1)}</b>\n\n"
@@ -103,6 +103,6 @@ async def idea_selected(
     )
 
     await callback.message.answer(
-        story.to_markdown(),
+        text=story.to_html(),
         reply_markup=story_keyboard(),
     )
