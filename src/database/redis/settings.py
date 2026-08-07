@@ -15,7 +15,6 @@ class RedisSettings(BaseProjectSettings):
     """
 
     redis_host: str = Field(alias="REDIS_HOST")
-    redis_port: int = Field(alias="REDIS_PORT")
     redis_pass: str = Field(alias="REDIS_PASS")
 
     # Role → DB index mapping. Declared as ClassVar so pydantic treats
@@ -32,7 +31,7 @@ class RedisSettings(BaseProjectSettings):
         Private helper. Callers should use the semantic properties below
         so the DB index is never chosen ad-hoc at the call site.
         """
-        return f"redis://:{self.redis_pass}@{self.redis_host}:{self.redis_port}/{db}"
+        return f"redis://:{self.redis_pass}@{self.redis_host}:6379/{db}"
 
     @property
     def default_url(self) -> str:

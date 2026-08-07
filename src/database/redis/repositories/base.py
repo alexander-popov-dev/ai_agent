@@ -1,15 +1,18 @@
 from abc import ABC, abstractmethod
 
-from src.application.session import Session
+from src.core.logging.mixin import LoggedMixin
+from src.pipelines.reels.session.config import ReelsSessionConfig
 
 
-class BaseRepository(ABC):
+class BaseRepository(ABC, LoggedMixin):
+    __log_layer__ = "repository"
+
     @abstractmethod
-    async def get(self, user_id: int) -> Session:
+    async def get(self, user_id: int) -> ReelsSessionConfig:
         ...
 
     @abstractmethod
-    async def save(self, user_id: int, schema: Session) -> None:
+    async def save(self, user_id: int, schema: ReelsSessionConfig) -> None:
         ...
 
     @abstractmethod
