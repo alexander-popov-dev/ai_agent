@@ -1,46 +1,53 @@
-import asyncio
-import logging
 from functools import cached_property
-from typing import Any, TypeVar
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableSerializable
-from openrouter.errors import ResponseValidationError
+from langchain_core.runnables import Runnable
 from pydantic import BaseModel
 
-from src.core.logging.logger import get_logger
 from src.core.logging.mixin import LoggedMixin
 
-logger = get_logger()
-TInput = TypeVar(name="TInput", bound=BaseModel)
-TOutput = TypeVar(name="TOutput", bound=BaseModel)
 
+class BaseAgent[TInput: BaseModel, TOutput: BaseModel](LoggedMixin):
+    """Base class for LLM agents with typed input and structured output."""
 
-class BaseAgent[TInput, TOutput](LoggedMixin):
-    __log_layer__ = "agent"
+    output_schema: type[TOutput]
 
-    OUTPUT_SCHEME: type[TOutput] = TOutput
-
-    def __init__(self, model: BaseChatModel, prompt: ChatPromptTemplate):
+    def __init__(self, model: BaseChatModel, prompt: ChatPromptTemplate) -> None:
+        """Initialize the agent with an LLM and a prompt template."""
         self._model = model
         self._prompt = prompt
 
+        self.logger.info(
+            "Initialized",
+            model=self._model_name,
+            agent=self.__class__.__name__,
+        )
+
+    @property
+    def _model_name(self) -> str:
+        """Return the model name for logging purposes."""
+        return (
+            getattr(self._model, "model_name", None)
+            or getattr(self._model, "model", None)
+            or getattr(self._model, "name", None)
+            or self._model.__class__.__name__
+        )
 
     @cached_property
-    def _chain(self) -> RunnableSerializable[dict[str, Any], TOutput]:
+    def _chain(self) -> Runnable:
+        """Build and cache the prompt-to-structured-output chain."""
         return (
-                self._prompt
-                |
-                self._model.with_structured_output(schema=self.OUTPUT_SCHEME)
+            self._prompt
+            | self._model.with_structured_output(
+                schema=self.output_schema,
+            )
         )
 
     async def execute(self, schema: TInput) -> TOutput:
-        self.logger.info("Invoking LLM", model=self._model)
-        for i in range(6):
-            try:
-                return await self._chain.ainvoke(schema.model_dump())
-            except ResponseValidationError as e:
-                await asyncio.sleep(2)
-
-        raise Exception('Invoke error')
+        """Execute the agent with the given input schema."""
+        self.logger.info(
+            "Invoking LLM agent",
+            model=self._model_name,
+        )
+        return await self._chain.ainvoke(schema.model_dump())
