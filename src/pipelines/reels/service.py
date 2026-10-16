@@ -1,7 +1,7 @@
 from src.pipelines.reels.pipeline import ReelsPipeline
-from src.pipelines.reels.schemas.idea import GenerateIdeasOutput, GenerateIdeaInput
-from src.pipelines.reels.schemas.story import GenerateStoryOutput, GenerateStoryInput, EditStoryInput
-from src.pipelines.reels.session.session import ReelsPipelineSession
+from src.pipelines.reels.idea.schemas import GenerateIdeasOutput, GenerateIdeaInput
+from src.pipelines.reels.story.schemas import GenerateStoryOutput, GenerateStoryInput, EditStoryInput
+from src.telegram.reels.session.session import ReelsPipelineSession
 
 
 class ReelsService:

@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 
 from langchain_core.language_models import BaseChatModel
 
-from src.ai.models.config import ModelConfig
-from src.ai.providers.config import ProviderConfig
 from src.core.logging.mixin import LoggedMixin
 from src.pipelines.core.config import PipelineConfig
 

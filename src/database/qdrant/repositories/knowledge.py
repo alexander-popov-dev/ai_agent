@@ -1,8 +1,8 @@
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import PointStruct
 
-from src.ai.embedding.base import BaseEmbedding
-from src.ai.knowledge.schema import KnowledgeDocument
+from ai import BaseEmbedding
+from ai import KnowledgeDocument
 from src.database.qdrant.repositories.base import BaseRepository
 
 

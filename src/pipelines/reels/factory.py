@@ -1,11 +1,11 @@
-from ai.base.agent import BaseAgent
+from ai.agent.base import BaseAgent
 from pipelines.core.config import PipelineConfig
-from src.ai.config import AIConfig
-from src.ai.providers.factory import ProviderFactory
+from ai import AIConfig
+from ai import ProviderFactory
 from src.pipelines.core.enums import Pipeline
 from src.pipelines.core.prompt_loader import PromptLoader
-from src.pipelines.reels.agents.ideas import GenerateIdeasAgent
-from src.pipelines.reels.agents.story import GenerateStoryAgent, EditStoryAgent
+from src.pipelines.reels.idea.agents import GenerateIdeasAgent
+from src.pipelines.reels.story.agents import GenerateStoryAgent, EditStoryAgent
 from src.pipelines.reels.config import ReelsPipelineConfig
 from src.pipelines.reels.pipeline import ReelsPipeline
 
