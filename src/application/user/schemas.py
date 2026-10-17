@@ -9,6 +9,6 @@ class UserSchema(BaseModel):
     id: UUID
     external_id: str
     name: str
-    niches:list[NicheScheme] = Field(default_factory=list)
+    niches: list[NicheScheme] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
