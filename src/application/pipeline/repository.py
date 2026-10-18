@@ -56,6 +56,19 @@ class PipelineStepRepository(BaseRepository[PipelineStep]):
 class UserPipelineSettingsRepository(BaseRepository[UserPipelineSettings]):
     model = UserPipelineSettings
 
+    async def get_user_pipline_step(self, step_id: UUID, user_id: UUID) -> UserPipelineSettings | None:
+        statement = (
+            select(self.model)
+            .where(
+                and_(
+                    self.model.step_id == step_id,
+                    self.model.user_id == user_id,
+                )
+            )
+        )
+        result = await self.session.execute(statement=statement)
+        return result.scalar_one_or_none()
+
 
 class UserPipelineSessionRepository(BaseRepository[UserPipelineSession]):
     model = UserPipelineSession
