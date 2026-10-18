@@ -23,6 +23,7 @@ class PipelineStepRepository(BaseRepository[PipelineStep]):
                     self.model.is_active.is_(True),
                 )
             )
+            .order_by(self.model.order)
         )
         result = await self.session.execute(statement=statement)
         return result.scalars().all()
