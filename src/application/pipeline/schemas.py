@@ -7,11 +7,24 @@ from src.pipelines.core.enums import PipelineSessionStatus
 
 class UserStepSettingsSchema(BaseModel):
     id: UUID
-    model: str
+    user_id: UUID
+    step_id: UUID
+    model_id: UUID
     temperature: float | int
 
 
+class UserStepSettingsUpdateSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UUID
+    step_id: UUID
+    model_id: UUID | None = None
+    temperature: float | int | None = None
+
+
 class PipelineStepSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
     display_name: str
@@ -22,23 +35,21 @@ class PipelineStepSchema(BaseModel):
 
     user_settings: UserStepSettingsSchema | None = None
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class PipelineSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
     display_name: str
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class UserPipelineSessionSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     user_id: UUID
     pipeline_id: UUID
     step_id: UUID | None = None
-    status: PipelineSessionStatus =PipelineSessionStatus.CREATED
+    status: PipelineSessionStatus = PipelineSessionStatus.CREATED
     error_message: str | None = None
     error_traceback: str | None = None
-
-    model_config = ConfigDict(from_attributes=True)
