@@ -2,6 +2,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from src.application.ai.schemas import AIModelSchema
 from src.pipelines.core.enums import PipelineSessionStatus
 
 
@@ -10,6 +11,16 @@ class UserStepSettingsSchema(BaseModel):
     user_id: UUID
     step_id: UUID
     model_id: UUID
+    temperature: float | int
+
+
+class UserStepSettingsWithModelSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    user_id: UUID
+    step_id: UUID
+    model: AIModelSchema
     temperature: float | int
 
 
@@ -33,7 +44,7 @@ class PipelineStepSchema(BaseModel):
     system_prompt: str
     user_prompt: str | None
 
-    user_settings: UserStepSettingsSchema | None = None
+    user_settings: UserStepSettingsWithModelSchema | None = None
 
 
 class PipelineSchema(BaseModel):
