@@ -15,8 +15,8 @@ class Pipeline(BaseModel):
     __tablename__ = "pipeline"
 
     name: Mapped[str] = mapped_column(String)
-    display_name: Mapped[str] = mapped_column(String, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    display_name: Mapped[str] = mapped_column(String)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     steps: Mapped[list["PipelineStep"]] = relationship(
         back_populates="pipeline",
         cascade="all, delete-orphan",
@@ -33,7 +33,7 @@ class PipelineStep(BaseModel):
     order: Mapped[int] = mapped_column(Integer)
     system_prompt: Mapped[str] = mapped_column(String)
     user_prompt: Mapped[str | None] = mapped_column(String)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     pipeline_id: Mapped[UUID] = mapped_column(
         SAUUID,
         ForeignKey(column="pipeline.id", ondelete="CASCADE"),
@@ -47,21 +47,25 @@ class UserPipelineSettings(BaseModel):
     __table_args__ = (
         UniqueConstraint("user_id", "step_id", name="uq_user_step"),
     )
-    temperature: Mapped[float | int] = mapped_column(Float, default=0.0)
+    temperature: Mapped[float | int] = mapped_column(
+        Float,
+        nullable=True
+    )
     user_id: Mapped[UUID] = mapped_column(
         SAUUID,
         ForeignKey("user.id", ondelete="CASCADE"),
-        index=True,
-    )
-    model_id: Mapped[UUID] = mapped_column(
-        SAUUID,
-        ForeignKey("ai_model.id", ondelete="RESTRICT"),
         index=True,
     )
     step_id: Mapped[UUID] = mapped_column(
         SAUUID,
         ForeignKey("pipeline_step.id", ondelete="CASCADE"),
         index=True,
+    )
+    model_id: Mapped[UUID] = mapped_column(
+        SAUUID,
+        ForeignKey("ai_model.id", ondelete="RESTRICT"),
+        index=True,
+        nullable=True,
     )
     user: Mapped["User"] = relationship(back_populates="user_pipeline_settings")
 
