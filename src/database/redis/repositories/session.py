@@ -1,10 +1,10 @@
 from redis.asyncio import Redis
 
-from src.pipelines.reels.session.config import ReelsSessionConfig
+from src.telegram.reels.session.config import ReelsSessionConfig
 from src.database.redis.repositories.base import BaseRepository
 
 
-class RedisSessionRepository(BaseRepository):
+class RedisSessionRepository(BaseRepository[ReelsSessionConfig]):
     PREFIX = "session"
 
     def __init__(self, client: Redis):

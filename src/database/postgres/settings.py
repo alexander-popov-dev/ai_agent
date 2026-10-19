@@ -9,10 +9,11 @@ from src.settings import BaseProjectSettings
 class DatabaseSettings(BaseProjectSettings):
     """PostgreSQL connection settings sourced from environment variables."""
 
-    db_host: str = Field(alias="DB_HOST")
-    db_user: str = Field(alias="DB_USER")
-    db_name: str = Field(alias="DB_NAME")
-    db_pass: str = Field(alias="DB_PASS")
+    pg_host: str = Field(alias="PG_HOST")
+    pg_port: int = Field(alias="PG_PORT")
+    pg_user: str = Field(alias="PG_USER")
+    pg_name: str = Field(alias="PG_NAME")
+    pg_pass: str = Field(alias="PG_PASS")
 
     @property
     def url(self) -> str:
@@ -24,10 +25,11 @@ class DatabaseSettings(BaseProjectSettings):
         """
         return URL.create(
             drivername="postgresql+asyncpg",
-            host=self.db_host,
-            username=self.db_user,
-            password=self.db_pass,
-            database=self.db_name,
+            host=self.pg_host,
+            port=self.pg_port,
+            username=self.pg_user,
+            password=self.pg_pass,
+            database=self.pg_name,
         ).render_as_string(hide_password=False)
 
 

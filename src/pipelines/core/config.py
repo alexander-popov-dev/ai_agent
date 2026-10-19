@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from src.ai.models.enum import Model
+from ai import Model
 from src.pipelines.reels.enums import Agent
 
 

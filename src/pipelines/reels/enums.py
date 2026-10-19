@@ -5,9 +5,13 @@ class Agent(StrEnum):
     GENERATE_IDEAS = "generate_ideas"
     GENERATE_STORY = "generate_story"
     EDIT_STORY = "edit_story"
-    PARSE_USER_ANSWER = "parse_user_answer"
 
 
-class StoryEditStatus(StrEnum):
-    EDIT = "edit"
-    APPROVED = "approved"
+class Callback(StrEnum):
+    PIPELINE = "pipeline"
+    NICHE = "niche_"
+    LANGUAGE = "language_"
+    STEP = "step_"
+    FOR_ALL = "for_all"
+    PROVIDER = "provider_"
+    MODEL = "model_"

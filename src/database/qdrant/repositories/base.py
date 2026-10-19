@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.ai.knowledge.schema import KnowledgeDocument
+from ai import KnowledgeDocument
 
 
 class BaseRepository(ABC):

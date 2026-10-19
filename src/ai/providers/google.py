@@ -1,8 +1,8 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from src.ai.config import ModelConfig, ProviderConfig
-from src.ai.providers.base import BaseProvider
+from ai import ModelConfig, ProviderConfig
+from ai.providers.base import BaseProvider
 from src.pipelines.core.config import PipelineConfig
 
 

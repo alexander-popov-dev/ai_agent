@@ -1,8 +1,8 @@
-from src.ai.base.agent import BaseAgent
+from ai.agent.base import BaseAgent
 from src.core.logging.decorators import log_execution
 from src.pipelines.core.base import BasePipeline
-from src.pipelines.reels.schemas.idea import GenerateIdeaInput, GenerateIdeasOutput
-from src.pipelines.reels.schemas.story import GenerateStoryInput, GenerateStoryOutput, EditStoryInput
+from src.pipelines.reels.idea.schemas import GenerateIdeaInput, GenerateIdeasOutput
+from src.pipelines.reels.story.schemas import GenerateStoryInput, GenerateStoryOutput, EditStoryInput
 
 
 class ReelsPipeline(BasePipeline):
