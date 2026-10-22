@@ -20,16 +20,13 @@ class ReelsPipeline(BasePipeline):
         self._edit_story = edit_story
         self._critique_story = critique_story
 
-
     @log_execution
     async def generate_ideas(self, payload: GenerateIdeaInput) -> GenerateIdeasOutput:
         return await self._generate_ideas.execute(payload=payload)
 
-
     @log_execution
     async def generate_story(self, payload: GenerateStoryInput) -> GenerateStoryOutput:
         return await self._generate_story.execute(payload=payload)
-
 
     @log_execution
     async def edit_story(self, payload: EditStoryInput) -> GenerateStoryOutput:
