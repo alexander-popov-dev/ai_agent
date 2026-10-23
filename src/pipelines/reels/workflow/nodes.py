@@ -3,7 +3,7 @@ from typing import Any
 from langgraph.types import interrupt
 from pydantic import BaseModel
 
-from src.pipelines.reels.pipeline import ReelsPipeline
+from src.ai.agent.base import BaseAgent
 from src.pipelines.reels.critic.schemas import CritiqueStoryInput
 from src.pipelines.reels.idea.schemas import GenerateIdeaInput, IdeaContext
 from src.pipelines.reels.story.schemas import GenerateStoryInput, StoryContext, EditStoryInput
@@ -27,13 +27,22 @@ def _json_model(value: BaseModel) -> dict[str, Any]:
 class ReelsWorkflowNodes:
     """Node implementations. AI work is delegated to the existing ReelsPipeline."""
 
-    def __init__(self, pipeline: ReelsPipeline) -> None:
-        self._pipeline = pipeline
+    def __init__(
+            self,
+            generate_ideas: BaseAgent,
+            generate_story: BaseAgent,
+            edit_story: BaseAgent,
+            critique_story: BaseAgent,
+    ) -> None:
+        self._generate_ideas = generate_ideas
+        self._generate_story = generate_story
+        self._edit_story = edit_story
+        self._critique_story = critique_story
 
     async def generate_ideas(self, raw_state: ReelsState | dict[str, Any]) -> dict[str, Any]:
         state = _state(raw_state)
-        result = await self._pipeline.generate_ideas(
-            schema=GenerateIdeaInput(
+        result = await self._generate_ideas.execute(
+            payload=GenerateIdeaInput(
                 niche=state.niche,
                 language=state.language,
                 ideas_count=state.ideas_count,
@@ -87,8 +96,8 @@ class ReelsWorkflowNodes:
         if state.selected_idea is None:
             raise ValueError("Cannot generate a story before an idea is selected")
 
-        story = await self._pipeline.generate_story(
-            schema=GenerateStoryInput(
+        story = await self._generate_story.execute(
+            payload=GenerateStoryInput(
                 idea=state.selected_idea,
                 language=state.language,
                 instructions=StoryContext(instructions=state.story_instructions),
@@ -106,8 +115,8 @@ class ReelsWorkflowNodes:
         if state.story is None:
             raise ValueError("Cannot critique a story before it has been generated")
 
-        critique = await self._pipeline.critique_story(
-            schema=CritiqueStoryInput(
+        critique = await self._critique_story.execute(
+            payload=CritiqueStoryInput(
                 caption=state.story.caption,
                 narration=state.story.narration,
                 language=state.language,
@@ -151,8 +160,8 @@ class ReelsWorkflowNodes:
         if not state.story_instructions:
             raise ValueError("Cannot edit a story without an instruction")
 
-        edited_story = await self._pipeline.edit_story(
-            schema=EditStoryInput(
+        edited_story = await self._edit_story.execute(
+            payload=EditStoryInput(
                 story=state.story,
                 instruction=state.story_instructions[-1],
                 language=state.language,
