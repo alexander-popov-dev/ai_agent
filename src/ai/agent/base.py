@@ -1,7 +1,6 @@
 from functools import cached_property
 from typing import Any, ClassVar
 
-from deepagents import create_deep_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
@@ -48,7 +47,6 @@ class BaseAgent[TInput: BaseModel, TOutput: BaseModel](LoggedMixin):
     @cached_property
     def _chain(self) -> Runnable:
         """Build and cache the prompt-to-structured-output chain."""
-        agent = create_deep_agent()
         return (
             self._prompt
             | self._model.with_structured_output(schema=self.output_schema)
