@@ -39,7 +39,7 @@ class PostgresProvider(Provider, LoggedMixin):
             conninfo=raw_dsn,
             max_size=20,
             open=False,
-            kwargs={"row_factory": dict_row},
+            kwargs={"row_factory": dict_row, "autocommit": True},
         )
         await pool.open()
 

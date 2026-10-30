@@ -7,7 +7,7 @@ from src.settings import BaseProjectSettings
 
 
 class RedisSettings(BaseProjectSettings):
-    """Redis connection settings.
+    """Redis connection pipeline_settings.
 
     A single Redis instance hosts several logical databases (indexes 0–15).
     Each application role is pinned to a fixed index so keyspaces between

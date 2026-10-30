@@ -1,107 +1,131 @@
 from html import escape
+from typing import Annotated
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
-from pipelines.reels.enums import Callback
-from src.pipelines.reels.service import ReelsService
+from src.application.niche.service import NicheService
+from src.core.enums import Language
+from src.pipelines.reels.workflow.decisions import ChooseIdeaDecision, ChooseIdeaAction
+from src.pipelines.reels.workflow.service import ReelsPipelineService
+from src.telegram.common.context import get_context, save_context
+from src.telegram.reels.context import ReelsAction, ReelsContext
 from src.telegram.reels.idea.keyboards import ideas_keyboard
-from src.telegram.reels.story.keyboards import story_keyboard
-from src.telegram.reels.fsm_state import ReelsState
+from src.telegram.reels.callbacks import ReelsCallback
+from src.telegram.reels.state import ReelsState
+
+router = Router(name="reels_idea")
+
+IDEAS_COUNT: int = 10
 
 
-router = Router()
+@router.callback_query(ReelsCallback.filter(F.action == ReelsAction.SELECT_LANGUAGE))
+@inject
+async def show_ideas_screen(
+        callback: CallbackQuery,
+        callback_data: ReelsCallback,
+        reels_service: Annotated[ReelsPipelineService, FromDishka()],
+        niche_service: Annotated[NicheService, FromDishka()],
+        state: FSMContext
+) -> None:
+    await callback.answer(text="Ща! Погодь")
+    context = await get_context(state=state, context_cls=ReelsContext)
+    await clear_idea_messages(target=callback, idea_message_ids=context.idea_message_ids)
+    niche = await niche_service.get_niche(niche_id=context.niche_id)
+    language = callback_data.object_id
 
-@router.callback_query(F.data.startswith(Callback.NICHE))
-async def niche_selected(
-    callback: CallbackQuery,
-    service: ReelsService,
-):
+    if language:
+        context.language = language
+    else:
+        language = context.language
 
-    niche = callback.data.split(":")[1]
+    await save_context(context=context, state=state)
 
-    ideas = await service.generate_ideas(
-        user_id=callback.from_user.id,
-        niche=niche,
-        ideas_count=10,
+    response = await reels_service.start(
+        user_id=context.user_id,
+        pipeline_id=context.pipeline_id,
+        niche=niche.name,
+        language=Language(language),
+        ideas_count=IDEAS_COUNT,
     )
 
-    text = "\n\n".join(
-        f"💡 <b>Идея {i + 1}</b>\n\n"
-        f"<b>📌 Название</b>\n"
-        f"{escape(idea.title)}\n\n"
-        f"<b>📝 Описание</b>\n"
-        f"{escape(idea.description)}"
-        for i, idea in enumerate(ideas.ideas)
+    context.session_id = response.session_id
+
+    context.idea_message_ids = await render_ideas_message(
+        target=callback,
+        ideas=response.state.ideas,
     )
 
-    await callback.message.edit_text(
-        text,
-        reply_markup=ideas_keyboard(start_index=0, count=len(ideas.ideas)),
-    )
+    await save_context(context=context, state=state)
 
-@router.callback_query(F.data == Callback.MORE_IDEAS)
+
+@router.callback_query(ReelsCallback.filter(F.action == ReelsAction.MORE_IDEAS))
 async def more_ideas(callback: CallbackQuery, state: FSMContext):
-
     await state.set_state(ReelsState.waiting_more_ideas)
+    context = await get_context(state=state, context_cls=ReelsContext)
+    await clear_idea_messages(target=callback, idea_message_ids=context.idea_message_ids)
+    await callback.message.answer(text="Напишите что изменить", reply_markup=None)
 
-    await callback.message.answer(
-        "Напишите что изменить."
-    )
 
 @router.message(ReelsState.waiting_more_ideas)
-async def receive_instruction(
-    message: Message,
-    service: ReelsService,
-    state: FSMContext,
-):
+@inject
+async def show_more_ideas_screen(
+        message: Message,
+        reels_service: Annotated[ReelsPipelineService, FromDishka()],
+        state: FSMContext,
+) -> None:
+    context = await get_context(state=state, context_cls=ReelsContext)
 
-    ideas_count = await service.get_ideas_count(user_id=message.from_user.id)
-
-    ideas = await service.generate_more_ideas(
-        user_id=message.from_user.id,
-        instruction=message.text,
-        ideas_count=5,
+    response = await reels_service.resume(
+        user_id=context.user_id,
+        session_id=context.session_id,
+        decision=ChooseIdeaDecision(action=ChooseIdeaAction.regenerate, instruction=message.text),
     )
 
-    await state.clear()
-
-    start = ideas_count
-
-    text = "\n\n".join(
-        f"💡 <b>Идея {start + (i + 1)}</b>\n\n"
-        f"<b>📌 Название</b>\n"
-        f"{escape(idea.title)}\n\n"
-        f"<b>📝 Описание</b>\n"
-        f"{escape(idea.description)}"
-        for i, idea in enumerate(ideas.ideas)
+    context.idea_message_ids = await render_ideas_message(
+        target=message,
+        ideas=response.state.ideas,
     )
 
-    await message.answer(
-        text,
-        reply_markup=ideas_keyboard(start_index=start,
-        count=len(ideas.ideas)),
-    )
+    await save_context(context=context, state=state)
 
-@router.callback_query(F.data.startswith(Callback.IDEA))
-async def idea_selected(
-    callback: CallbackQuery,
-    service: ReelsService,
-):
 
-    index = int(callback.data.split(":")[1])
+async def render_ideas_message(target: Message | CallbackQuery, ideas: list) -> list[int]:
+    idea_message_ids = []
 
-    await service.select_idea(
-        user_id=callback.from_user.id,
-        selected_idea_index=index,
-    )
+    for i, idea in enumerate(ideas):
+        text = (
+            f"💡 <b>Идея {i + 1}</b>\n\n"
+            f"<b>📌 Название</b>\n"
+            f"{escape(idea.title)}\n\n"
+            f"<b>📝 Описание</b>\n"
+            f"{escape(idea.description)}"
+        )
 
-    story = await service.generate_story(
-        user_id=callback.from_user.id,
-    )
+        keyboard = ideas_keyboard(idea_index=i, is_more_btn=i == len(ideas) - 1)
 
-    await callback.message.answer(
-        text=story.to_html(),
-        reply_markup=story_keyboard(),
-    )
+        if isinstance(target, Message):
+            msg = await target.answer(
+                text=text,
+                reply_markup=keyboard,
+            )
+        else:
+            msg = await target.message.answer(
+                text=text,
+                reply_markup=keyboard,
+            )
+
+        idea_message_ids.append(msg.message_id)
+
+    return idea_message_ids
+
+
+async def clear_idea_messages(target: Message | CallbackQuery, idea_message_ids: list[int]) -> None:
+    if idea_message_ids:
+        if isinstance(target, Message):
+            await target.bot.delete_messages(chat_id=target.chat.id, message_ids=idea_message_ids)
+        if isinstance(target, CallbackQuery):
+            await target.bot.delete_messages(chat_id=target.message.chat.id, message_ids=idea_message_ids)

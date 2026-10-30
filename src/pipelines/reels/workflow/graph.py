@@ -1,7 +1,7 @@
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 
-from src.pipelines.reels.pipeline import ReelsPipeline
+from src.application.pipeline.schemas import PipelineStepWithUserSettingsSchema
 from src.pipelines.reels.workflow.nodes import ReelsWorkflowNodes
 from src.pipelines.reels.workflow.state import IdeaAction, ReelsState, StoryAction
 
@@ -21,14 +21,14 @@ def _after_story_review(raw_state: ReelsState | dict) -> str:
 
 
 def build_reels_graph(
-    pipeline: ReelsPipeline,
-    checkpointer: BaseCheckpointSaver,
+        pipeline_steps: list[PipelineStepWithUserSettingsSchema],
+        checkpointer: BaseCheckpointSaver,
 ):
     """Build the Reels graph once and reuse it for all sessions.
 
     A separate thread_id (the UserPipelineSession UUID) isolates each run.
     """
-    nodes = ReelsWorkflowNodes(pipeline)
+    nodes = ReelsWorkflowNodes(pipeline_steps=pipeline_steps)
     builder = StateGraph(ReelsState)
 
     builder.add_node("generate_ideas", nodes.generate_ideas)

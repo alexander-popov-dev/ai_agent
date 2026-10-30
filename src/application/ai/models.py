@@ -11,8 +11,8 @@ class AIProvider(BaseModel):
     __tablename__ = "ai_provider"
 
     name: Mapped[str] = mapped_column(String)
-    display_name: Mapped[str] = mapped_column(String, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    display_name: Mapped[str] = mapped_column(String)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     models: Mapped[list["AIModel"]] = relationship(
         back_populates="provider",
         cascade="all, delete-orphan",
@@ -25,7 +25,7 @@ class AIModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String)
     display_name: Mapped[str] = mapped_column(String)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     provider_id: Mapped[UUID] = mapped_column(
         SAUUID,
         ForeignKey(column="ai_provider.id", ondelete="CASCADE"),

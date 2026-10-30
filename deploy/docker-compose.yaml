@@ -1,47 +1,47 @@
 services:
-  # ==========================================================
-  # PostgreSQL
-  # ==========================================================
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${PG_DB}
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASS}
-    ports:
-      - "127.0.0.1:${PG_PORT_LOCAL}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - ../.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_PASSWORD"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - internal
-
-  # ==========================================================
-  # Redis
-  # ==========================================================
-  redis:
-    image: redis:8-alpine
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:${REDIS_PORT_LOCAL}:6379"
-    command:
-      --port ${REDIS_PORT} 
-      --save 60 1 
-      --loglevel warning 
-      --requirepass ${REDIS_PASS}
-    env_file:
-      - ../.env
-    volumes:
-      - redis_data:/data
-    networks:
-      - internal
+#  # ==========================================================
+#  # PostgreSQL
+#  # ==========================================================
+#  postgres:
+#    image: postgres:17-alpine
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_DB: ${PG_DB}
+#      POSTGRES_USER: ${PG_USER}
+#      POSTGRES_PASSWORD: ${PG_PASS}
+#    ports:
+#      - "127.0.0.1:${PG_PORT_LOCAL}:5432"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    env_file:
+#      - ../.env
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_PASSWORD"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    networks:
+#      - internal
+#
+#  # ==========================================================
+#  # Redis
+#  # ==========================================================
+#  redis:
+#    image: redis:8-alpine
+#    restart: unless-stopped
+#    ports:
+#      - "127.0.0.1:${REDIS_PORT_LOCAL}:6379"
+#    command:
+#      --port ${REDIS_PORT}
+#      --save 60 1
+#      --loglevel warning
+#      --requirepass ${REDIS_PASS}
+#    env_file:
+#      - ../.env
+#    volumes:
+#      - redis_data:/data
+#    networks:
+#      - internal
 #
 #  # ==========================================================
 #  # Qdrant
@@ -139,10 +139,6 @@ services:
     env_file:
       - ../.env
 
-    depends_on:
-      - redis
-      - postgres
-
     networks:
       - internal
 
@@ -155,6 +151,6 @@ volumes:
 
 networks:
   internal:
-    driver: bridge
+    external: true
   traefik-public:
     external: true

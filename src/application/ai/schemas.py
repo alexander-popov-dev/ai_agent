@@ -9,7 +9,6 @@ class AIProviderSchema(BaseModel):
     display_name: str
     base_url: str | None = None
     api_key: str | None = None
-    models: list["AIModelScheme"] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -17,9 +16,13 @@ class AIProviderSchema(BaseModel):
         self.api_key = api_key
 
 
-class AIModelScheme(BaseModel):
+class AIModelSchema(BaseModel):
     id: UUID
     name: str
     display_name: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AIModelWithProviderSchema(AIModelSchema):
+    provider: AIProviderSchema

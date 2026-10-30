@@ -10,6 +10,7 @@ from src.database.postgres.model import BaseModel
 
 if TYPE_CHECKING:
     from src.application.user.models import User
+    from src.application.ai.models import AIModel
 
 class Pipeline(BaseModel):
     __tablename__ = "pipeline"
@@ -40,16 +41,13 @@ class PipelineStep(BaseModel):
         index=True,
     )
     pipeline: Mapped["Pipeline"] = relationship(back_populates="steps")
+    user_settings: Mapped["UserPipelineSettings | None"] = relationship(uselist=False)
 
 
 class UserPipelineSettings(BaseModel):
     __tablename__ = "user_pipeline_settings"
     __table_args__ = (
         UniqueConstraint("user_id", "step_id", name="uq_user_step"),
-    )
-    temperature: Mapped[float | int] = mapped_column(
-        Float,
-        nullable=True
     )
     user_id: Mapped[UUID] = mapped_column(
         SAUUID,
@@ -67,7 +65,12 @@ class UserPipelineSettings(BaseModel):
         index=True,
         nullable=True,
     )
+    temperature: Mapped[float | int] = mapped_column(
+        Float,
+        nullable=True
+    )
     user: Mapped["User"] = relationship(back_populates="user_pipeline_settings")
+    model: Mapped["AIModel"] = relationship()
 
 
 class UserPipelineSession(BaseModel):
