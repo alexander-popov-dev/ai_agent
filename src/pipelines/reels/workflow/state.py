@@ -32,6 +32,7 @@ class ReelsState(BaseModel):
     ideas_count: int = 10
 
     ideas: list[GenerateIdeaOutput] = Field(default_factory=list)
+    generated_ideas: list[GenerateIdeaOutput] = Field(default_factory=list)
     selected_idea: GenerateIdeaOutput | None = None
     idea_action: IdeaAction | None = None
     idea_instructions: list[str] = Field(default_factory=list)

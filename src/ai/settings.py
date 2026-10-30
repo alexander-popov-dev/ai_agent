@@ -15,10 +15,21 @@ class AIProjectSettings(BaseProjectSettings):
         alias="OPENROUTER_API_KEY",
     )
 
+    mistral_api_key: SecretStr | None = Field(
+        default=None,
+        alias="MISTRAL_API_KEY",
+    )
+
+    groq_api_key: SecretStr | None = Field(
+        default=None,
+        alias="GROQ_API_KEY",
+    )
+
     openrouter_base_url: str = Field(
         default="https://openrouter.ai/api/v1",
         alias="OPENROUTER_BASE_URL",
     )
+
     ollama_base_url: str = Field(
         default="http://localhost:11434",
         alias="OLLAMA_BASE_URL",

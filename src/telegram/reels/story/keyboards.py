@@ -1,22 +1,18 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from pipelines.reels.enums import Callback
+from src.telegram.reels.context import ReelsAction
+from src.telegram.reels.callbacks import ReelsCallback
 
 
 def story_keyboard():
 
-    kb = InlineKeyboardBuilder()
+    builder = InlineKeyboardBuilder()
 
-    kb.button(
+    builder.button(
         text="✏️ Изменить",
-        callback_data=Callback.EDIT_STORY,
+        callback_data=ReelsCallback(
+            action=ReelsAction.EDIT_STORY
+        ),
     )
 
-    kb.button(
-        text="✅ Одобрить",
-        callback_data=Callback.APPROVE_STORY,
-    )
-
-    kb.adjust(2)
-
-    return kb.as_markup()
+    return builder.as_markup()

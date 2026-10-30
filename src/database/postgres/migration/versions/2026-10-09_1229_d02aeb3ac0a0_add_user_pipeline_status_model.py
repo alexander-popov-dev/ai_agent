@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table('user_pipeline_status',
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('pipeline_id', sa.UUID(), nullable=False),
-    sa.Column('steps', sa.String(length=10), nullable=True),
+    sa.Column('step', sa.String(length=10), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('thread_id', sa.String(length=255), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),

@@ -1,4 +1,4 @@
-"""delete steps add error< step_id from user_pipeline_status
+"""delete step add error< step_id from user_pipeline_status
 
 Revision ID: 2fd564a5f41d
 Revises: 1933180d5b1d

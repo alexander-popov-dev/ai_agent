@@ -2,50 +2,66 @@ import traceback
 from typing import Any
 from uuid import UUID
 
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
 from src.application.pipeline.models import UserPipelineSession
 from src.application.pipeline.repository import UserPipelineSessionRepository
+from src.application.pipeline.service import PipelineService
+from src.core.enums import Language
 from src.pipelines.core.enums import PipelineSessionStatus
 from src.pipelines.reels.workflow.decisions import ChooseIdeaDecision, ReviewStoryDecision
+from src.pipelines.reels.workflow.graph import build_reels_graph
 from src.pipelines.reels.workflow.state import ReelsState
 from src.pipelines.reels.workflow.contracts import ReelsWorkflowResponse
 
 
-class ReelsWorkflowService:
+class ReelsPipelineService:
     """Application boundary for starting and resuming a persisted Reels graph run."""
 
-    def __init__(self, graph: Any, sessions: UserPipelineSessionRepository) -> None:
-        self._graph = graph
-        self._sessions = sessions
+    def __init__(
+            self,
+            checkpointer: BaseCheckpointSaver,
+            pipeline_service: PipelineService,
+            session: UserPipelineSessionRepository
+    ) -> None:
+        self._checkpointer = checkpointer
+        self._pipeline_service = pipeline_service
+        self._session = session
+
+    async def _build_graph(self, user_id: UUID, pipeline_id: UUID) -> CompiledStateGraph:
+        pipeline_steps = await self._pipeline_service.get_user_pipeline_settings(user_id=user_id,
+                                                                                 pipeline_id=pipeline_id)
+        return build_reels_graph(pipeline_steps=pipeline_steps, checkpointer=self._checkpointer)
 
     async def start(
-        self,
-        *,
-        user_id: UUID,
-        pipeline_id: UUID,
-        niche: str,
-        language: str = "ua",
-        ideas_count: int = 10,
+            self,
+            *,
+            user_id: UUID,
+            pipeline_id: UUID,
+            niche: str,
+            language: Language,
+            ideas_count: int,
     ) -> ReelsWorkflowResponse:
         """Create a business session and run until the first user interrupt."""
-        session = await self._sessions.create(
+        session = await self._session.create(
             instance=UserPipelineSession(
                 user_id=user_id,
                 pipeline_id=pipeline_id,
                 status=PipelineSessionStatus.IN_PROGRESS,
             )
         )
-        config = self._config(session.id)
-        initial_state = ReelsState(
-            user_id=user_id,
-            niche=niche,
-            language=language,
-            ideas_count=ideas_count,
-        )
-
         try:
-            result = await self._graph.ainvoke(initial_state.model_dump(mode="json"), config=config)
+            graph = await self._build_graph(user_id=user_id, pipeline_id=pipeline_id)
+            config = self._config(session.id)
+            initial_state = ReelsState(
+                user_id=user_id,
+                niche=niche,
+                language=language,
+                ideas_count=ideas_count,
+            )
+            result = await graph.ainvoke(input=initial_state, config=config)
             await self._finish_if_completed(session, result)
             return self._to_response(session.id, result)
         except Exception as exc:
@@ -53,23 +69,23 @@ class ReelsWorkflowService:
             raise
 
     async def resume(
-        self,
-        *,
-        session_id: UUID,
-        user_id: UUID,
-        decision: ChooseIdeaDecision | ReviewStoryDecision,
+            self,
+            *,
+            session_id: UUID,
+            user_id: UUID,
+            decision: ChooseIdeaDecision | ReviewStoryDecision,
     ) -> ReelsWorkflowResponse:
         """Resume the same graph thread after validating session ownership."""
-        session = await self._sessions.get_by_id(session_id)
-        if session is None or session.user_id != user_id:
-            # Do not disclose whether a session owned by another user exists.
-            raise ValueError("Pipeline session not found")
-        if session.status != PipelineSessionStatus.IN_PROGRESS:
-            raise ValueError(f"Pipeline session is not active (status={session.status})")
-
+        session = await self._session.get_by_id(session_id)
         try:
-            result = await self._graph.ainvoke(
-                Command(resume=decision.model_dump(mode="json")),
+            if session is None or session.user_id != user_id:
+                # Do not disclose whether a session owned by another user exists.
+                raise ValueError("Pipeline session not found")
+            if session.status != PipelineSessionStatus.IN_PROGRESS:
+                raise ValueError(f"Pipeline session is not active (status={session.status})")
+            graph = await self._build_graph(user_id=user_id, pipeline_id=session.pipeline_id)
+            result = await graph.ainvoke(
+                input=Command(resume=decision),
                 config=self._config(session.id),
             )
             await self._finish_if_completed(session, result)
@@ -98,10 +114,10 @@ class ReelsWorkflowService:
             session.status = PipelineSessionStatus.IN_PROGRESS
         else:
             session.status = PipelineSessionStatus.COMPLETED
-        await self._sessions.session.flush()
+        await self._session.session.flush()
 
     async def _mark_failed(self, session: UserPipelineSession, exc: Exception) -> None:
         session.status = PipelineSessionStatus.FAILED
         session.error_message = str(exc)
         session.error_traceback = "".join(traceback.format_exception(exc))
-        await self._sessions.session.flush()
+        await self._session.session.flush()

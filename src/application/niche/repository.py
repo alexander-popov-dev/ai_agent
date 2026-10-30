@@ -19,6 +19,6 @@ class NicheRepository(BaseRepository[Niche]):
         :return: Sequence of Niche entities.
         """
 
-        statement = select(self.model).where(self.model.user_id == user_id and self.model.is_active)
+        statement = select(self.model).where(self.model.user_id == user_id and self.model.is_active.is_active(True))
         result = await self.session.execute(statement=statement)
         return result.scalars().all()

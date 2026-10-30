@@ -7,7 +7,7 @@ from src.settings import BaseProjectSettings
 
 
 class DatabaseSettings(BaseProjectSettings):
-    """PostgreSQL connection settings sourced from environment variables."""
+    """PostgreSQL connection pipeline_settings sourced from environment variables."""
 
     pg_host: str = Field(alias="PG_HOST")
     pg_port: int = Field(alias="PG_PORT")
@@ -38,7 +38,7 @@ class DatabaseSettings(BaseProjectSettings):
 def get_database_settings() -> DatabaseSettings:
     """Return the singleton DatabaseSettings instance.
 
-    pydantic-settings parses env vars on instantiation; @cache makes this
+    pydantic-pipeline_settings parses env vars on instantiation; @cache makes this
     a process-wide singleton so env is read only once.
     """
     return DatabaseSettings()  # pyright: ignore[reportCallIssue]

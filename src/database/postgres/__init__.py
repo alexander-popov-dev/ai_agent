@@ -20,4 +20,4 @@
 
 __all__ = ["BaseModel"]
 
-from database.postgres.model import BaseModel
+from src.database.postgres.model import BaseModel

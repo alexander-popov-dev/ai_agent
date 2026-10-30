@@ -1,22 +1,17 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_openrouter import ChatOpenRouter
 
-from ai import ModelConfig, ProviderConfig
-from ai.providers.base import BaseProvider
-from src.pipelines.core.config import PipelineConfig
+from src.ai.providers.base import BaseProvider
+from src.application.pipeline.schemas import PipelineStepWithUserSettingsSchema
 
 
 class OpenRouterProvider(BaseProvider):
-    def create_chat_model(
-            self,
-            provider_config: ProviderConfig,
-            model_config: ModelConfig,
-            pipeline_config: PipelineConfig,
-    ) -> BaseChatModel:
+    provider = "openrouter"
 
+    def create_chat_model(self, pipeline_step: PipelineStepWithUserSettingsSchema) -> BaseChatModel:
         return ChatOpenRouter(
-            api_key=provider_config.api_key,
-            base_url=provider_config.base_url,
-            model=model_config.model,
-            temperature=pipeline_config.temperature,
+            api_key=self._settings.openrouter_api_key,
+            base_url=self._settings.openrouter_base_url,
+            model=pipeline_step.user_settings.model.name,
+            temperature=pipeline_step.user_settings.temperature,
         )

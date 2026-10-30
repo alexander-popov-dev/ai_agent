@@ -1,7 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select, Sequence, and_, update, or_
+from sqlalchemy import select, Sequence, and_, update
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import contains_eager, joinedload
 
+from src.application.ai.models import AIModel, AIProvider
 from src.application.pipeline.models import Pipeline, PipelineStep, UserPipelineSettings, UserPipelineSession
 from src.database.postgres.repository import BaseRepository
 from src.pipelines.core.enums import PipelineSessionStatus
@@ -32,15 +35,23 @@ class PipelineStepRepository(BaseRepository[PipelineStep]):
             self,
             pipeline_id: UUID,
             user_id: UUID
-    ) -> Sequence[tuple[PipelineStep, UserPipelineSettings | None]]:
+    ) -> Sequence[tuple[PipelineStep, UserPipelineSettings, AIModel, AIProvider | None]]:
         statement = (
-            select(PipelineStep, UserPipelineSettings)
+            select(PipelineStep, UserPipelineSettings, AIModel, AIProvider)
             .outerjoin(
                 UserPipelineSettings,
                 and_(
                     UserPipelineSettings.step_id == PipelineStep.id,
                     UserPipelineSettings.user_id == user_id,
-                )
+                ),
+            )
+            .outerjoin(
+                AIModel,
+                AIModel.id == UserPipelineSettings.model_id
+            )
+            .outerjoin(
+                AIProvider,
+                AIProvider.id == AIModel.provider_id
             )
             .where(
                 PipelineStep.pipeline_id == pipeline_id,
@@ -48,9 +59,8 @@ class PipelineStepRepository(BaseRepository[PipelineStep]):
             )
             .order_by(PipelineStep.order)
         )
-
         result = await self.session.execute(statement)
-        return result.all()
+        return list(result.all())
 
 
 class UserPipelineSettingsRepository(BaseRepository[UserPipelineSettings]):
@@ -68,6 +78,41 @@ class UserPipelineSettingsRepository(BaseRepository[UserPipelineSettings]):
         )
         result = await self.session.execute(statement=statement)
         return result.scalar_one_or_none()
+
+    SETTING_FIELDS = frozenset({
+        "model_id",
+        "temperature",
+    })
+
+    async def upsert_for_steps(self, settings: list) -> None:
+        """Insert or update selected settings for one or more steps."""
+        update_fields = set(settings[0]) - {"user_id", "step_id"}
+
+        if not update_fields:
+            raise ValueError("No settings to update.")
+
+        if any(
+                set(record) - {"user_id", "step_id"} != update_fields
+                for record in settings
+        ):
+            raise ValueError(
+                "All settings must contain the same fields."
+            )
+
+        statement = insert(self.model).values(settings)
+
+        update_values = {
+            field: getattr(statement.excluded, field)
+            for field in update_fields
+        }
+        # update_values["updated_at"] = func.now()
+
+        statement = statement.on_conflict_do_update(
+            constraint="uq_user_step",
+            set_=update_values,
+        )
+
+        await self.session.execute(statement)
 
 
 class UserPipelineSessionRepository(BaseRepository[UserPipelineSession]):

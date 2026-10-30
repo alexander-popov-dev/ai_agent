@@ -1,5 +1,6 @@
 from dishka import AsyncContainer, make_async_container
 
+from src.pipelines.reels.di import ReelsPipelineProvider
 from src.application.ai.di import AIProviderProvider
 from src.database.redis.di import RedisFSMDBProvider
 from src.application.niche.di import NicheProvider
@@ -18,4 +19,5 @@ def create_container() -> AsyncContainer:
         UserProvider(),
         NicheProvider(),
         PipelineProvider(),
+        ReelsPipelineProvider()
     )

@@ -1,21 +1,26 @@
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from pipelines.reels.enums import Callback
+from src.telegram.reels.context import ReelsAction
+from src.telegram.reels.callbacks import ReelsCallback
 
 
-def ideas_keyboard(start_index: int, count: int):
+def ideas_keyboard(idea_index: int, is_more_btn: bool = False) -> InlineKeyboardMarkup:
 
-    kb = InlineKeyboardBuilder()
+    builder = InlineKeyboardBuilder()
 
-    for i in range(start_index, start_index + count):
-        kb.button(
-            text=str(i + 1),
-            callback_data=f"{Callback.IDEA}:{i}",
-        )
+    builder.button(
+        text=f"✅ Выбрать",
+        callback_data=ReelsCallback(
+            action=ReelsAction.SELECT_IDEA,
+            object_id=idea_index,
+        ),
+    )
 
-    kb.button(
-        text="➕ Еще идеи",
-        callback_data=Callback.MORE_IDEAS,
-    ).adjust(3)
+    if is_more_btn:
+        builder.button(
+            text="➕ Еще идеи",
+            callback_data=ReelsCallback(action=ReelsAction.MORE_IDEAS)
+        ).adjust(1)
 
-    return kb.as_markup()
+    return builder.as_markup()

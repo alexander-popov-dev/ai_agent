@@ -3,7 +3,7 @@ from typing import AsyncIterable
 from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 
-from database.redis.settings import RedisSettings, get_redis_settings
+from src.database.redis.settings import RedisSettings, get_redis_settings
 
 
 class BaseRedisProvider(Provider):

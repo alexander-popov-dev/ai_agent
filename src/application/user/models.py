@@ -14,7 +14,7 @@ class User(BaseModel):
 
     external_id: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     user_pipeline_settings: Mapped[list["UserPipelineSettings"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
